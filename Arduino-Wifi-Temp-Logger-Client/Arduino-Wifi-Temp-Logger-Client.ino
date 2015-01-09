@@ -5,27 +5,22 @@
 OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 
-boolean logTemps;
 long tempLogLastMillis = 0;  
 long tempLogInterval = 60000;  
 
 void setup() {
 
-  Serial1.begin(115200);
+  Serial.begin(115200);
 
   sensors.begin();
   
   delay(3000);
   enterCommandMode();
   
-  logTemps = true;
   tempLogLastMillis = millis();
 }
 
 void loop() {
-  
-  if(logTemps){
-    //Serial.println("Log Temps!");
 
     unsigned long currentMillis = millis();
 
@@ -36,7 +31,6 @@ void loop() {
       tempLogLastMillis = currentMillis;
       logTempsToCloud();
     }
-  }
 
 }
 
@@ -76,11 +70,11 @@ void sendHttpFormPostRequest(String formDataString)
     HttpRequest += formDataString;
   unsigned int HttpRequestLength = HttpRequest.length();
   
-  Serial1.print("AT+SNDB=" + (String)HttpRequestLength  + "\r" );
-  Serial1.find(">");
+  Serial.print("AT+SNDB=" + (String)HttpRequestLength  + "\r" );
+  Serial.find(">");
   
-  Serial1.print(HttpRequest);
-  Serial1.find("+ok");
+  Serial.print(HttpRequest);
+  Serial.find("+ok");
 
   sendWifiSerialCmdWaitForOk("AT+TCPDISB=off\r");
 
@@ -91,12 +85,12 @@ boolean waitForSocketBToConnect(){
   unsigned long start = millis();
   char lastCmdResultChar;
  
-  Serial1.print("AT+TCPLKB\r");
+  Serial.print("AT+TCPLKB\r");
     
   while( millis() - start < waitTimeout ){
     
-    if (Serial1.available()) { //Output should be "+ok=on" so skip 1 char
-        lastCmdResultChar = Serial1.read();
+    if (Serial.available()) { //Output should be "+ok=on" so skip 1 char
+        lastCmdResultChar = Serial.read();
         //uncomment this for debugging. Will show "+ok=off" until a connection is made
         //Serial.write(lastCmdResultChar);
     }
@@ -105,7 +99,7 @@ boolean waitForSocketBToConnect(){
       return true;
     }else if(lastCmdResultChar == 'f'){ // Command Returned "+ok=off"
       lastCmdResultChar = 'x'; //Reset the character so we don't issue this command repeatedly
-      Serial1.print("AT+TCPLKB\r");
+      Serial.print("AT+TCPLKB\r");
     }
   }
   return false;
@@ -114,18 +108,18 @@ boolean enterCommandMode()
 {
   //Serial.println("Enter Command Mode");
   
-  Serial1.write('+');
+  Serial.write('+');
   delay(10);
-  Serial1.write('+');
+  Serial.write('+');
   delay(10);
-  Serial1.write('+');
-  if(!Serial1.find("a")){
+  Serial.write('+');
+  if(!Serial.find("a")){
     //Serial.println("Error! No Ack from wifi module!");
     return false;
   }
   
-  Serial1.write('a');
-  if(!Serial1.find("+ok")){
+  Serial.write('a');
+  if(!Serial.find("+ok")){
     //Serial.println("Error! No OK received from wifi module!");
     return false;
   }  
@@ -133,13 +127,13 @@ boolean enterCommandMode()
   return true;
 }
 boolean sendWifiSerialCmd(String command){
-  Serial1.print(command + "\r");
+  Serial.print(command + "\r");
 }
 boolean sendWifiSerialCmdWaitForOk(String command){
   
   sendWifiSerialCmd(command);
   
-  if(Serial1.find("+ok")){
+  if(Serial.find("+ok")){
     return true;
   }else{
     //Serial.println("Error! No +ok received from command!");
